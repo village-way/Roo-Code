@@ -8,6 +8,7 @@
 		"dev": "next dev --port 3001",
 		"build": "next build",
 		"start": "next start --port 3001",
+		"clean": "rimraf .next .turbo",
 		"drizzle-kit": "dotenvx run -f .env.local -- tsx node_modules/drizzle-kit/bin.cjs",
 		"db:generate": "pnpm drizzle-kit generate",
 		"db:migrate": "pnpm drizzle-kit migrate",
