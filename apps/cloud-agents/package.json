@@ -1,0 +1,42 @@
+{
+	"name": "@roo-code/cloud-agents",
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"lint": "next lint",
+		"check-types": "tsc --noEmit",
+		"dev": "next dev --port 3001",
+		"build": "next build",
+		"start": "next start --port 3001",
+		"drizzle-kit": "dotenvx run -f .env.local -- tsx node_modules/drizzle-kit/bin.cjs",
+		"db:generate": "pnpm drizzle-kit generate",
+		"db:migrate": "pnpm drizzle-kit migrate",
+		"db:push": "pnpm drizzle-kit push",
+		"db:check": "pnpm drizzle-kit check",
+		"db:studio": "pnpm drizzle-kit studio",
+		"services:start": "docker compose up -d db redis",
+		"services:stop": "docker compose down",
+		"worker:dev": "tsx src/lib/queue/worker.ts"
+	},
+	"dependencies": {
+		"@roo-code/types": "workspace:^",
+		"bullmq": "^5.37.0",
+		"drizzle-orm": "^0.44.1",
+		"execa": "^9.6.0",
+		"ioredis": "^5.4.3",
+		"next": "^15.2.5",
+		"postgres": "^3.4.7",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"zod": "^3.25.41"
+	},
+	"devDependencies": {
+		"@roo-code/config-eslint": "workspace:^",
+		"@roo-code/config-typescript": "workspace:^",
+		"@types/node": "^22.15.20",
+		"@types/react": "^18.3.23",
+		"@types/react-dom": "^18.3.7",
+		"drizzle-kit": "^0.31.1",
+		"tsx": "^4.19.3"
+	}
+}

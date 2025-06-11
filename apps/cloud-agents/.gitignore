@@ -1,0 +1,4 @@
+.next
+
+docker/postgres-data
+docker/redis-data
