@@ -15,15 +15,20 @@
 		"db:push": "pnpm drizzle-kit push",
 		"db:check": "pnpm drizzle-kit check",
 		"db:studio": "pnpm drizzle-kit studio",
-		"services:start": "docker compose up -d db redis",
+		"services:start": "docker compose up -d db redis bullmq-dashboard",
 		"services:stop": "docker compose down",
-		"worker:dev": "tsx src/lib/queue/worker.ts"
+		"worker:dev": "tsx src/lib/queue/worker.ts",
+		"dashboard": "tsx scripts/dashboard.ts"
 	},
 	"dependencies": {
+		"@bull-board/api": "^6.10.1",
+		"@bull-board/express": "^6.10.1",
+		"@bull-board/ui": "^6.10.1",
 		"@roo-code/types": "workspace:^",
 		"bullmq": "^5.37.0",
 		"drizzle-orm": "^0.44.1",
 		"execa": "^9.6.0",
+		"express": "^5.1.0",
 		"ioredis": "^5.4.3",
 		"next": "^15.2.5",
 		"postgres": "^3.4.7",
@@ -34,6 +39,7 @@
 	"devDependencies": {
 		"@roo-code/config-eslint": "workspace:^",
 		"@roo-code/config-typescript": "workspace:^",
+		"@types/express": "^5.0.3",
 		"@types/node": "^22.15.20",
 		"@types/react": "^18.3.23",
 		"@types/react-dom": "^18.3.7",

@@ -37,6 +37,22 @@ services:
     profiles:
       - server
 
+  bullmq-dashboard:
+    container_name: cloud-agents-bullmq-dashboard
+    build:
+      context: ../../
+      dockerfile: apps/cloud-agents/docker/Dockerfile.dashboard
+    ports:
+      - "${BULL_BOARD_PORT:-3002}:3002"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - BULL_BOARD_PORT=3002
+      - NODE_ENV=production
+    depends_on:
+      - redis
+    profiles:
+      - server
+
   db:
     container_name: cloud-agents-db
     image: postgres:17.5
