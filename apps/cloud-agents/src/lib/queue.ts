@@ -1,6 +1,6 @@
 import { Queue, Job } from "bullmq"
 
-import type { JobTypes, CloudJobData } from "@/types"
+import type { JobTypes, JobPayload, JobParams } from "@/types"
 
 import { redis } from "./redis"
 
@@ -14,10 +14,6 @@ const queue = new Queue("cloud-agents", {
 	},
 })
 
-export async function enqueue<T extends keyof JobTypes>(
-	type: T,
-	payload: JobTypes[T],
-	jobId: number,
-): Promise<Job<CloudJobData<T>>> {
-	return queue.add(type, { type, payload, jobId }, { jobId: `${type}-${jobId}` })
+export async function enqueue<T extends keyof JobTypes>(params: JobParams<T>): Promise<Job<JobPayload<T>>> {
+	return queue.add(params.type, params, { jobId: `${params.type}-${params.jobId}` })
 }

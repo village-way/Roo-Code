@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
 		switch (values.type) {
 			case "github.issue.fix":
-				await enqueue("github.issue.fix", values.payload, job.id)
+				await enqueue({ jobId: job.id, type: "github.issue.fix", payload: values.payload })
 				break
 			default:
 				throw new Error(`Unknown job type: ${values.type}`)
