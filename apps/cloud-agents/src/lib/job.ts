@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm"
 import { Job } from "bullmq"
 
 import { db, cloudJobs, type UpdateCloudJob } from "@/db"
-import type { JobTypes, JobType, JobStatus, JobParams } from "@/types"
+import type { JobType, JobStatus, JobParams } from "@/types"
 
 import { fixGitHubIssue } from "./jobs/fixGitHubIssue"
 
@@ -15,7 +15,7 @@ export async function processJob<T extends JobType>({ data: { type, payload, job
 
 		switch (type) {
 			case "github.issue.fix":
-				result = await fixGitHubIssue(jobId, payload as JobTypes["github.issue.fix"])
+				result = await fixGitHubIssue(payload)
 				break
 			default:
 				throw new Error(`Unknown job type: ${type}`)

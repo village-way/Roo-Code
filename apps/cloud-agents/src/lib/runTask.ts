@@ -8,8 +8,11 @@ import { execa } from "execa"
 import { type TaskEvent, TaskCommandName, RooCodeEventName, IpcMessageType, EVALS_SETTINGS } from "@roo-code/types"
 import { IpcClient } from "@roo-code/ipc"
 
+import type { JobPayload, JobType } from "@/types"
+
 import { Logger } from "./logger"
 import { isDockerContainer } from "./utils"
+import { SlackNotifier } from "./slack"
 
 const TIMEOUT = 30 * 60 * 1_000
 
@@ -20,13 +23,21 @@ class SubprocessTimeoutError extends Error {
 	}
 }
 
-type RunTaskOptions = {
+type RunTaskOptions<T extends JobType> = {
+	jobType: T
+	jobPayload: JobPayload<T>
 	prompt: string
 	publish: (taskEvent: TaskEvent) => Promise<void>
 	logger: Logger
 }
 
-export const runTask = async ({ prompt, publish, logger }: RunTaskOptions) => {
+export const runTask = async <T extends JobType>({
+	jobType,
+	jobPayload,
+	prompt,
+	publish,
+	logger,
+}: RunTaskOptions<T>) => {
 	const workspacePath = "/Users/cte/Documents/Roomote-Control" // findGitRoot(process.cwd())
 	const ipcSocketPath = path.resolve(os.tmpdir(), `${crypto.randomUUID().slice(0, 8)}.sock`)
 	const env = { ROO_CODE_IPC_SOCKET_PATH: ipcSocketPath }
@@ -73,12 +84,15 @@ export const runTask = async ({ prompt, publish, logger }: RunTaskOptions) => {
 		}
 	}
 
-	let taskStartedAt = Date.now() // eslint-disable-line @typescript-eslint/no-unused-vars
+	let taskStartedAt = Date.now()
 	let taskFinishedAt: number | undefined
 	let taskAbortedAt: number | undefined
 	let taskTimedOut: boolean = false
 	let rooTaskId: string | undefined
 	let isClientDisconnected = false
+
+	const slackNotifier = new SlackNotifier(logger)
+	let slackThreadTs: string | null = null
 
 	const ignoreEvents: Record<"broadcast" | "log", RooCodeEventName[]> = {
 		broadcast: [RooCodeEventName.Message],
@@ -105,14 +119,23 @@ export const runTask = async ({ prompt, publish, logger }: RunTaskOptions) => {
 		if (eventName === RooCodeEventName.TaskStarted) {
 			taskStartedAt = Date.now()
 			rooTaskId = payload[0]
+			slackThreadTs = await slackNotifier.postTaskStarted({ jobType, jobPayload, rooTaskId })
 		}
 
 		if (eventName === RooCodeEventName.TaskAborted) {
 			taskAbortedAt = Date.now()
+
+			if (slackThreadTs) {
+				await slackNotifier.postTaskUpdated(slackThreadTs, "Task was aborted", "warning")
+			}
 		}
 
 		if (eventName === RooCodeEventName.TaskCompleted) {
 			taskFinishedAt = Date.now()
+
+			if (slackThreadTs) {
+				await slackNotifier.postTaskCompleted(slackThreadTs, true, taskFinishedAt - taskStartedAt, rooTaskId)
+			}
 		}
 	})
 
@@ -142,6 +165,10 @@ export const runTask = async ({ prompt, publish, logger }: RunTaskOptions) => {
 		taskTimedOut = true
 		logger.error("time limit reached")
 
+		if (slackThreadTs) {
+			await slackNotifier.postTaskUpdated(slackThreadTs, "Task timed out after 30 minutes", "error")
+		}
+
 		if (rooTaskId && !isClientDisconnected) {
 			logger.info("cancelling task")
 			client.sendCommand({ commandName: TaskCommandName.CancelTask, data: rooTaskId })
@@ -153,6 +180,11 @@ export const runTask = async ({ prompt, publish, logger }: RunTaskOptions) => {
 
 	if (!taskFinishedAt && !taskTimedOut) {
 		logger.error("client disconnected before task finished")
+
+		if (slackThreadTs) {
+			await slackNotifier.postTaskUpdated(slackThreadTs, "Client disconnected before task completion", "error")
+		}
+
 		throw new Error("Client disconnected before task completion.")
 	}
 
