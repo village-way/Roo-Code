@@ -26,19 +26,19 @@ COPY scripts/bootstrap.mjs ./scripts/
 COPY packages/types/package.json ./packages/types/
 COPY packages/config-eslint/package.json ./packages/config-eslint/
 COPY packages/config-typescript/package.json ./packages/config-typescript/
-COPY apps/cloud-agents/package.json ./apps/cloud-agents/
+COPY apps/roomote/package.json ./apps/roomote/
 
 # Install dependencies
-RUN pnpm install --filter @roo-code/cloud-agents
+RUN pnpm install --filter @roo-code/roomote
 
 # Copy source code
 COPY packages/types ./packages/types/
 COPY packages/config-eslint ./packages/config-eslint/
 COPY packages/config-typescript ./packages/config-typescript/
-COPY apps/cloud-agents ./apps/cloud-agents/
+COPY apps/roomote ./apps/roomote/
 
 # Set working directory to the app
-WORKDIR /app/apps/cloud-agents
+WORKDIR /app/apps/roomote
 
 # Build the application
 RUN pnpm build

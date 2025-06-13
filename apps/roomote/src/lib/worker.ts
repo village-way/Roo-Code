@@ -3,7 +3,7 @@ import { Worker } from "bullmq"
 import { redis } from "./redis"
 import { processJob } from "./job"
 
-export const worker = new Worker("cloud-agents", processJob, {
+export const worker = new Worker("roomote", processJob, {
 	connection: redis,
 	concurrency: 1,
 	removeOnComplete: { count: 100 },

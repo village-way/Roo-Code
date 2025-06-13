@@ -4,7 +4,7 @@ import type { JobTypes, JobPayload, JobParams } from "@/types"
 
 import { redis } from "./redis"
 
-const queue = new Queue("cloud-agents", {
+const queue = new Queue("roomote", {
 	connection: redis,
 	defaultJobOptions: {
 		removeOnComplete: 100,

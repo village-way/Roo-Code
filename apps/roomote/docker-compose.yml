@@ -1,6 +1,6 @@
 services:
     db:
-        container_name: cloud-agents-db
+        container_name: roomote-db
         image: postgres:17.5
         ports:
             - "5433:5432"
@@ -18,7 +18,7 @@ services:
             start_period: 30s
 
     redis:
-        container_name: cloud-agents-redis
+        container_name: roomote-redis
         image: redis:7-alpine
         ports:
             - "6380:6379"
@@ -27,10 +27,10 @@ services:
         command: redis-server --appendonly yes
 
     dashboard:
-        container_name: cloud-agents-dashboard
+        container_name: roomote-dashboard
         build:
             context: ../../
-            dockerfile: apps/cloud-agents/docker/Dockerfile.dashboard
+            dockerfile: apps/roomote/docker/Dockerfile.dashboard
         ports:
             - "3002:3002"
         environment:
@@ -43,7 +43,7 @@ services:
     api:
         build:
             context: ../../
-            dockerfile: apps/cloud-agents/docker/Dockerfile.app
+            dockerfile: apps/roomote/docker/Dockerfile.app
         ports:
             - "3001:3001"
         environment:
@@ -61,7 +61,7 @@ services:
     worker:
         build:
             context: ../../
-            dockerfile: apps/cloud-agents/docker/Dockerfile.worker
+            dockerfile: apps/roomote/docker/Dockerfile.worker
             args:
                 - GH_TOKEN=${GH_TOKEN}
         env_file:
@@ -70,11 +70,11 @@ services:
             - HOST_EXECUTION_METHOD=docker
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-            - /tmp/cloud-agents:/var/log/cloud-agents
+            - /tmp/roomote:/var/log/roomote
         stdin_open: true
         tty: true
 
 networks:
     default:
-        name: cloud-agents_default
+        name: roomote_default
         driver: bridge
