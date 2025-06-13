@@ -5,7 +5,7 @@ services:
         ports:
             - "5433:5432"
         volumes:
-            - ./docker/postgres-data:/var/lib/postgresql/data
+            - ./.docker/postgres:/var/lib/postgresql/data
         environment:
             - POSTGRES_USER=postgres
             - POSTGRES_PASSWORD=password
@@ -23,14 +23,14 @@ services:
         ports:
             - "6380:6379"
         volumes:
-            - ./docker/redis-data:/data
+            - ./.docker/redis:/data
         command: redis-server --appendonly yes
 
     dashboard:
         container_name: roomote-dashboard
         build:
             context: ../../
-            dockerfile: apps/roomote/docker/Dockerfile.dashboard
+            dockerfile: apps/roomote/Dockerfile.dashboard
         ports:
             - "3002:3002"
         environment:
@@ -43,7 +43,7 @@ services:
     api:
         build:
             context: ../../
-            dockerfile: apps/roomote/docker/Dockerfile.app
+            dockerfile: apps/roomote/Dockerfile.app
         ports:
             - "3001:3001"
         environment:
@@ -61,7 +61,7 @@ services:
     worker:
         build:
             context: ../../
-            dockerfile: apps/roomote/docker/Dockerfile.worker
+            dockerfile: apps/roomote/Dockerfile.worker
             args:
                 - GH_TOKEN=${GH_TOKEN}
         env_file:

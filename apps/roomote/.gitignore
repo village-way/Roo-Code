@@ -1,6 +1,10 @@
+# Next.js
 .next
 
-docker/postgres-data
-docker/redis-data
+# docker
+.docker/*
+!.docker/scripts
+!.docker/entrypoints
 
+# ENV
 !.env.example
