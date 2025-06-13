@@ -9,28 +9,6 @@ export interface SlackMessage {
 	channel?: string
 }
 
-// Example response:
-// {
-//     "ok": true,
-//     "channel": "C123ABC456",
-//     "ts": "1503435956.000247",
-//     "message": {
-//         "text": "Here's a message for you",
-//         "username": "ecto1",
-//         "bot_id": "B123ABC456",
-//         "attachments": [
-//             {
-//                 "text": "This is an attachment",
-//                 "id": 1,
-//                 "fallback": "This is an attachment's fallback"
-//             }
-//         ],
-//         "type": "message",
-//         "subtype": "bot_message",
-//         "ts": "1503435956.000247"
-//     }
-// }
-
 export interface SlackResponse {
 	ok: boolean
 	channel?: string
@@ -66,16 +44,7 @@ export class SlackNotifier {
 			const result: SlackResponse = await response.json()
 
 			if (!result.ok) {
-				if (result.error === "not_in_channel") {
-					this.logger.error(
-						`Slack bot is not a member of channel "${messageWithChannel.channel}". ` +
-							`Please add the bot to the channel or ensure the channel exists. ` +
-							`Error: ${result.error}`,
-					)
-				} else {
-					this.logger.error(`Slack API error: ${result.error}`)
-				}
-				return null
+				this.logger.error(`Slack API error: ${result.error}`)
 			}
 
 			return result.ts ?? null
@@ -100,14 +69,10 @@ export class SlackNotifier {
 					text: `🚀 Task Started`,
 					blocks: [
 						{
-							type: "header",
-							text: { type: "plain_text", text: "🚀 Roo Code Task Started" },
-						},
-						{
 							type: "section",
 							text: {
 								type: "mrkdwn",
-								text: `Creating a pull request for <https://github.com/RooCodeInc/Roo-Code/issues/${jobPayload.issue}|GitHub Issue #${jobPayload.issue}>`,
+								text: `🚀 *Task Started*\nCreating a pull request for <https://github.com/RooCodeInc/Roo-Code/issues/${jobPayload.issue}|GitHub Issue #${jobPayload.issue}>`,
 							},
 						},
 						{

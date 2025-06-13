@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
 		const body = await request.text()
 
-		if (!verifySignature(body, signature, process.env.GITHUB_WEBHOOK_SECRET!)) {
+		if (!verifySignature(body, signature, process.env.GH_WEBHOOK_SECRET!)) {
 			return NextResponse.json({ error: "invalid_signature" }, { status: 401 })
 		}
 

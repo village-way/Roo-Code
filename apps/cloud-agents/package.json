@@ -16,7 +16,7 @@
 		"db:check": "pnpm drizzle-kit check",
 		"db:studio": "pnpm drizzle-kit studio",
 		"services:start": "docker compose up -d db redis dashboard",
-		"services:stop": "docker compose down",
+		"services:stop": "docker compose down dashboard redis db",
 		"worker": "dotenvx run -f .env -- tsx src/lib/worker.ts",
 		"dashboard": "tsx scripts/dashboard.ts"
 	},
