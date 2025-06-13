@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db, cloudJobs } from "@/lib/db"
 import { eq } from "drizzle-orm"
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+import { db, cloudJobs } from "@/db"
+
+type Params = Promise<{ id: string }>
+
+export async function GET(request: NextRequest, { params }: { params: Params }) {
 	try {
 		const { id } = await params
 		const jobId = parseInt(id, 10)

@@ -1,104 +1,103 @@
 services:
-  app:
-    build:
-      context: ../../
-      dockerfile: apps/cloud-agents/docker/Dockerfile.app
-    ports:
-      - "${CLOUD_AGENTS_PORT:-3001}:3001"
-    environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/cloud_agents
-      - REDIS_URL=redis://redis:6379
-      - NODE_ENV=production
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    profiles:
-      - server
+    db:
+        container_name: cloud-agents-db
+        image: postgres:17.5
+        ports:
+            - "5433:5432"
+        volumes:
+            - ./docker/postgres-data:/var/lib/postgresql/data
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=password
+            - POSTGRES_DB=cloud_agents
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres -d cloud_agents"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+        profiles:
+            - server
 
-  worker:
-    build:
-      context: ../../
-      dockerfile: apps/cloud-agents/docker/Dockerfile.app
-    command: pnpm --filter @roo-code/cloud-agents worker:dev
-    environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/cloud_agents
-      - REDIS_URL=redis://redis:6379
-      - NODE_ENV=production
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp/cloud-agents:/var/log/cloud-agents
-    depends_on:
-      - db
-      - redis
-    profiles:
-      - server
+    redis:
+        container_name: cloud-agents-redis
+        image: redis:7-alpine
+        ports:
+            - "6380:6379"
+        volumes:
+            - ./docker/redis-data:/data
+        command: redis-server --appendonly yes
+        profiles:
+            - server
 
-  bullmq-dashboard:
-    container_name: cloud-agents-bullmq-dashboard
-    build:
-      context: ../../
-      dockerfile: apps/cloud-agents/docker/Dockerfile.dashboard
-    ports:
-      - "${BULL_BOARD_PORT:-3002}:3002"
-    environment:
-      - REDIS_URL=redis://redis:6379
-      - BULL_BOARD_PORT=3002
-      - NODE_ENV=production
-    depends_on:
-      - redis
-    profiles:
-      - server
+    dashboard:
+        container_name: cloud-agents-dashboard
+        build:
+            context: ../../
+            dockerfile: apps/cloud-agents/docker/Dockerfile.dashboard
+        ports:
+            - "3002:3002"
+        environment:
+            - REDIS_URL=redis://redis:6379
+            - NODE_ENV=production
+        depends_on:
+            - redis
+        profiles:
+            - server
 
-  db:
-    container_name: cloud-agents-db
-    image: postgres:17.5
-    ports:
-      - "${CLOUD_AGENTS_DB_PORT:-5433}:5432"
-    volumes:
-      - ./docker/postgres-data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=cloud_agents
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d cloud_agents"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    profiles:
-      - server
+    api:
+        build:
+            context: ../../
+            dockerfile: apps/cloud-agents/docker/Dockerfile.app
+        ports:
+            - "3001:3001"
+        environment:
+            - DATABASE_URL=postgresql://postgres:password@db:5432/cloud_agents
+            - REDIS_URL=redis://redis:6379
+            - NODE_ENV=production
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        depends_on:
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_started
+        profiles:
+            - server
 
-  redis:
-    container_name: cloud-agents-redis
-    image: redis:7-alpine
-    ports:
-      - "${CLOUD_AGENTS_REDIS_PORT:-6380}:6379"
-    volumes:
-      - ./docker/redis-data:/data
-    command: redis-server --appendonly yes
-    profiles:
-      - server
+    worker:
+        build:
+            context: ../../
+            dockerfile: apps/cloud-agents/docker/Dockerfile.app
+        command: pnpm --filter @roo-code/cloud-agents worker:dev
+        environment:
+            - DATABASE_URL=postgresql://postgres:password@db:5432/cloud_agents
+            - REDIS_URL=redis://redis:6379
+            - NODE_ENV=production
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /tmp/cloud-agents:/var/log/cloud-agents
+        depends_on:
+            - db
+            - redis
+        profiles:
+            - server
 
-  runner:
-    build:
-      context: ../../
-      dockerfile: apps/cloud-agents/docker/Dockerfile.agent
-    environment:
-      - HOST_EXECUTION_METHOD=docker
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp/cloud-agents:/var/log/cloud-agents
-    stdin_open: true
-    tty: true
-    profiles:
-      - runner
+    runner:
+        build:
+            context: ../../
+            dockerfile: apps/cloud-agents/docker/Dockerfile.runner
+        environment:
+            - HOST_EXECUTION_METHOD=docker
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /tmp/cloud-agents:/var/log/cloud-agents
+        stdin_open: true
+        tty: true
+        profiles:
+            - runner
 
 networks:
-  default:
-    name: cloud-agents_default
-    driver: bridge
+    default:
+        name: cloud-agents_default
+        driver: bridge
