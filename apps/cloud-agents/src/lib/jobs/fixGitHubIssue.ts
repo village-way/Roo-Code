@@ -26,6 +26,10 @@ ${payload.body}
 ${payload.labels && payload.labels.length > 0 ? `Labels: ${payload.labels.join(", ")}` : ""}
 
 Please analyze the issue, understand what needs to be fixed, and implement a solution.
+If you're reasonably satisfied with the solution then create and submit a pull request using the "gh" command line tool.
+You'll first need to create a new branch for the pull request.
+
+Make sure to reference the issue in the pull request description.
 `.trim()
 
 	const result = await runTask({

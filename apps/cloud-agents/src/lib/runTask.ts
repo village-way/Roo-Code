@@ -9,7 +9,7 @@ import { type TaskEvent, TaskCommandName, RooCodeEventName, IpcMessageType, EVAL
 import { IpcClient } from "@roo-code/ipc"
 
 import { Logger } from "./logger"
-import { isDockerContainer, findGitRoot } from "./utils"
+import { isDockerContainer } from "./utils"
 
 const TIMEOUT = 30 * 60 * 1_000
 
@@ -27,7 +27,7 @@ type RunTaskOptions = {
 }
 
 export const runTask = async ({ prompt, publish, logger }: RunTaskOptions) => {
-	const workspacePath = findGitRoot(process.cwd())
+	const workspacePath = "/Users/cte/Documents/Roomote-Control" // findGitRoot(process.cwd())
 	const ipcSocketPath = path.resolve(os.tmpdir(), `${crypto.randomUUID().slice(0, 8)}.sock`)
 	const env = { ROO_CODE_IPC_SOCKET_PATH: ipcSocketPath }
 	const controller = new AbortController()

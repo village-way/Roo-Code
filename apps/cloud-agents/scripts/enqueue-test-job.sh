@@ -9,8 +9,8 @@ if [ -z "$ISSUE_NUMBER" ]; then
     echo "Usage: $0 <issue_number> [repo]"
     echo ""
     echo "Examples:"
-    echo "  $0 4567                           # Fetch issue #4567 from RooCodeInc/Roo-Code"
-    echo "  $0 123 owner/repo                 # Fetch issue #123 from owner/repo"
+    echo "  $0 4567           # Fetch issue #4567 from RooCodeInc/Roo-Code"
+    echo "  $0 123 owner/repo # Fetch issue #123 from owner/repo"
     echo ""
     echo "This script fetches real GitHub issue data and enqueues it as a job."
     exit 1
@@ -54,11 +54,6 @@ LABELS=$(echo "$ISSUE_DATA" | jq -r '[.labels[].name] | @json')
 TITLE_ESCAPED=$(printf '%s' "$TITLE" | sed 's/"/\\"/g' | sed 's/\n/\\n/g')
 BODY_ESCAPED=$(printf '%s' "$BODY" | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}' | sed 's/\\n$//')
 
-echo "Issue Title: $TITLE"
-echo "Issue Labels: $LABELS"
-echo ""
-echo "Enqueueing job..."
-
 JSON_PAYLOAD=$(cat <<EOF
 {
   "type": "github.issue.fix",
@@ -73,7 +68,4 @@ JSON_PAYLOAD=$(cat <<EOF
 EOF
 )
 
-curl -X POST "$JOBS_ENDPOINT" \
-  -H "Content-Type: application/json" \
-  -d "$JSON_PAYLOAD" \
-  -w "\nStatus: %{http_code}\n\n"
+curl -X POST "$JOBS_ENDPOINT" -H "Content-Type: application/json" -d "$JSON_PAYLOAD" -w "\nStatus: %{http_code}\n\n"
