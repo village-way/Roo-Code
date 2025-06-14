@@ -1,4 +1,4 @@
-# docker compose build dashboard
+# docker compose build base controller
 
 FROM roomote-base AS base
 
@@ -21,5 +21,5 @@ COPY packages/types ./packages/types/
 COPY packages/ipc ./packages/ipc/
 
 WORKDIR /roo/apps/roomote
-EXPOSE 3002
-CMD ["pnpm", "dashboard"]
+ENV NODE_ENV=production
+CMD ["pnpm", "controller"]

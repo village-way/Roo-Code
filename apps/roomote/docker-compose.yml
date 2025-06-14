@@ -1,4 +1,10 @@
 services:
+    base:
+        build:
+            context: ../../
+            dockerfile: apps/roomote/Dockerfile.base
+        image: roomote-base
+
     db:
         container_name: roomote-db
         image: postgres:17.5
@@ -37,13 +43,15 @@ services:
             - REDIS_URL=redis://redis:6379
             - NODE_ENV=production
         depends_on:
+            base:
+                condition: service_completed_successfully
             redis:
                 condition: service_started
 
     api:
         build:
             context: ../../
-            dockerfile: apps/roomote/Dockerfile.app
+            dockerfile: apps/roomote/Dockerfile.api
         ports:
             - "3001:3001"
         environment:
@@ -53,6 +61,8 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
         depends_on:
+            base:
+                condition: service_completed_successfully
             db:
                 condition: service_healthy
             redis:
@@ -73,6 +83,36 @@ services:
             - /tmp/roomote:/var/log/roomote
         stdin_open: true
         tty: true
+        depends_on:
+            base:
+                condition: service_completed_successfully
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_started
+
+    controller:
+        build:
+            context: ../../
+            dockerfile: apps/roomote/Dockerfile.controller
+        env_file:
+            - .env
+        environment:
+            - DATABASE_URL=postgresql://postgres:password@db:5432/cloud_agents
+            - REDIS_URL=redis://redis:6379
+            - NODE_ENV=production
+            - HOST_EXECUTION_METHOD=docker
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /tmp/roomote:/var/log/roomote
+        depends_on:
+            base:
+                condition: service_completed_successfully
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_started
+        restart: unless-stopped
 
 networks:
     default:
