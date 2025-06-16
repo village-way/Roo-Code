@@ -37,6 +37,7 @@ services:
         build:
             context: ../../
             dockerfile: apps/roomote/Dockerfile.dashboard
+        image: roomote-dashboard
         ports:
             - "3002:3002"
         environment:
@@ -52,6 +53,7 @@ services:
         build:
             context: ../../
             dockerfile: apps/roomote/Dockerfile.api
+        image: roomote-api
         ports:
             - "3001:3001"
         environment:
@@ -74,6 +76,7 @@ services:
             dockerfile: apps/roomote/Dockerfile.worker
             args:
                 - GH_TOKEN=${GH_TOKEN}
+        image: roomote-worker
         env_file:
             - .env
         environment:
@@ -95,6 +98,7 @@ services:
         build:
             context: ../../
             dockerfile: apps/roomote/Dockerfile.controller
+        image: roomote-controller
         env_file:
             - .env
         environment:

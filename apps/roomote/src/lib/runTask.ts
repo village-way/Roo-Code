@@ -119,7 +119,10 @@ export const runTask = async <T extends JobType>({
 		if (eventName === RooCodeEventName.TaskStarted) {
 			taskStartedAt = Date.now()
 			rooTaskId = payload[0]
-			slackThreadTs = await slackNotifier.postTaskStarted({ jobType, jobPayload, rooTaskId })
+
+			if (rooTaskId) {
+				slackThreadTs = await slackNotifier.postTaskStarted({ jobType, jobPayload, rooTaskId })
+			}
 		}
 
 		if (eventName === RooCodeEventName.TaskAborted) {

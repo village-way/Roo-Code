@@ -1,4 +1,4 @@
-# Shared base image for roomote controller and worker
+# docker compose build base
 
 FROM node:20-slim AS base
 

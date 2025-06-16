@@ -1,4 +1,4 @@
-# docker compose build api
+# docker compose build base api
 
 FROM roomote-base AS base
 
@@ -12,7 +12,7 @@ COPY packages/ipc/package.json ./packages/ipc/
 COPY apps/roomote/package.json ./apps/roomote/
 
 COPY scripts/bootstrap.mjs ./scripts/
-RUN pnpm install --filter @roo-code/roomote
+RUN pnpm install
 
 COPY apps/roomote ./apps/roomote/
 COPY packages/config-eslint ./packages/config-eslint/
