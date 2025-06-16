@@ -10,12 +10,19 @@ export async function processJob<T extends JobType>({ data: { type, payload, job
 	console.log(`[${job.name} | ${job.id}] Processing job ${jobId} of type ${type}`)
 
 	try {
-		await updateJobStatus(jobId, "processing")
 		let result: unknown
 
 		switch (type) {
 			case "github.issue.fix":
-				result = await fixGitHubIssue(payload)
+				result = await fixGitHubIssue(payload, {
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
+					onTaskStarted: async (slackThreadTs: string | null, _rooTaskId: string) => {
+						if (slackThreadTs) {
+							await updateJobStatus(jobId, "processing", undefined, undefined, slackThreadTs)
+						}
+					},
+				})
+
 				break
 			default:
 				throw new Error(`Unknown job type: ${type}`)
@@ -31,7 +38,13 @@ export async function processJob<T extends JobType>({ data: { type, payload, job
 	}
 }
 
-async function updateJobStatus(jobId: number, status: JobStatus, result?: unknown, error?: string) {
+async function updateJobStatus(
+	jobId: number,
+	status: JobStatus,
+	result?: unknown,
+	error?: string,
+	slackThreadTs?: string,
+) {
 	const values: UpdateCloudJob = { status }
 
 	if (status === "processing") {
@@ -46,6 +59,10 @@ async function updateJobStatus(jobId: number, status: JobStatus, result?: unknow
 		if (error) {
 			values.error = error
 		}
+	}
+
+	if (slackThreadTs) {
+		values.slackThreadTs = slackThreadTs
 	}
 
 	await db.update(cloudJobs).set(values).where(eq(cloudJobs.id, jobId))

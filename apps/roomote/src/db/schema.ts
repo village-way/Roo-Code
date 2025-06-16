@@ -14,6 +14,7 @@ export const cloudJobs = pgTable("cloud_jobs", {
 	payload: jsonb().notNull().$type<JobPayload>(),
 	result: jsonb(),
 	error: text(),
+	slackThreadTs: text("slack_thread_ts"),
 	startedAt: timestamp("started_at"),
 	completedAt: timestamp("completed_at"),
 	createdAt: timestamp("created_at").notNull().defaultNow(),

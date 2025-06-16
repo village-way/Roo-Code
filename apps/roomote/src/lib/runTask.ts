@@ -23,12 +23,26 @@ class SubprocessTimeoutError extends Error {
 	}
 }
 
+export type RunTaskCallbacks = {
+	onTaskStarted?: (slackThreadTs: string | null, rooTaskId: string) => Promise<void>
+	onTaskAborted?: (slackThreadTs: string | null) => Promise<void>
+	onTaskCompleted?: (
+		slackThreadTs: string | null,
+		success: boolean,
+		duration: number,
+		rooTaskId?: string,
+	) => Promise<void>
+	onTaskTimedOut?: (slackThreadTs: string | null) => Promise<void>
+	onClientDisconnected?: (slackThreadTs: string | null) => Promise<void>
+}
+
 type RunTaskOptions<T extends JobType> = {
 	jobType: T
 	jobPayload: JobPayload<T>
 	prompt: string
 	publish: (taskEvent: TaskEvent) => Promise<void>
 	logger: Logger
+	callbacks?: RunTaskCallbacks
 }
 
 export const runTask = async <T extends JobType>({
@@ -37,6 +51,7 @@ export const runTask = async <T extends JobType>({
 	prompt,
 	publish,
 	logger,
+	callbacks,
 }: RunTaskOptions<T>) => {
 	const workspacePath = "/roo/repos/Roo-Code" // findGitRoot(process.cwd())
 	const ipcSocketPath = path.resolve(os.tmpdir(), `${crypto.randomUUID().slice(0, 8)}.sock`)
@@ -122,6 +137,10 @@ export const runTask = async <T extends JobType>({
 
 			if (rooTaskId) {
 				slackThreadTs = await slackNotifier.postTaskStarted({ jobType, jobPayload, rooTaskId })
+
+				if (callbacks?.onTaskStarted) {
+					await callbacks.onTaskStarted(slackThreadTs, rooTaskId)
+				}
 			}
 		}
 
@@ -131,6 +150,10 @@ export const runTask = async <T extends JobType>({
 			if (slackThreadTs) {
 				await slackNotifier.postTaskUpdated(slackThreadTs, "Task was aborted", "warning")
 			}
+
+			if (callbacks?.onTaskAborted) {
+				await callbacks.onTaskAborted(slackThreadTs)
+			}
 		}
 
 		if (eventName === RooCodeEventName.TaskCompleted) {
@@ -138,6 +161,10 @@ export const runTask = async <T extends JobType>({
 
 			if (slackThreadTs) {
 				await slackNotifier.postTaskCompleted(slackThreadTs, true, taskFinishedAt - taskStartedAt, rooTaskId)
+			}
+
+			if (callbacks?.onTaskCompleted) {
+				await callbacks.onTaskCompleted(slackThreadTs, true, taskFinishedAt - taskStartedAt, rooTaskId)
 			}
 		}
 	})
@@ -172,6 +199,10 @@ export const runTask = async <T extends JobType>({
 			await slackNotifier.postTaskUpdated(slackThreadTs, "Task timed out after 30 minutes", "error")
 		}
 
+		if (callbacks?.onTaskTimedOut) {
+			await callbacks.onTaskTimedOut(slackThreadTs)
+		}
+
 		if (rooTaskId && !isClientDisconnected) {
 			logger.info("cancelling task")
 			client.sendCommand({ commandName: TaskCommandName.CancelTask, data: rooTaskId })
@@ -186,6 +217,10 @@ export const runTask = async <T extends JobType>({
 
 		if (slackThreadTs) {
 			await slackNotifier.postTaskUpdated(slackThreadTs, "Client disconnected before task completion", "error")
+		}
+
+		if (callbacks?.onClientDisconnected) {
+			await callbacks.onClientDisconnected(slackThreadTs)
 		}
 
 		throw new Error("Client disconnected before task completion.")

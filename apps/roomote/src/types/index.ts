@@ -45,7 +45,7 @@ export type CreateJob = z.infer<typeof createJobSchema>
  * GitHubWebhook
  */
 
-export const githubWebhookSchema = z.object({
+export const githubIssueWebhookSchema = z.object({
 	action: z.string(),
 	issue: z.object({
 		number: z.number(),
@@ -58,4 +58,19 @@ export const githubWebhookSchema = z.object({
 	}),
 })
 
-export type GitHubWebhook = z.infer<typeof githubWebhookSchema>
+export type GitHubIssueWebhook = z.infer<typeof githubIssueWebhookSchema>
+
+export const githubPullRequestWebhookSchema = z.object({
+	action: z.string(),
+	pull_request: z.object({
+		number: z.number(),
+		title: z.string(),
+		body: z.string().nullable(),
+		html_url: z.string(),
+	}),
+	repository: z.object({
+		full_name: z.string(),
+	}),
+})
+
+export type GitHubPullRequestWebhook = z.infer<typeof githubPullRequestWebhookSchema>
