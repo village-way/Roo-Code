@@ -3,24 +3,33 @@ import { Worker } from "bullmq"
 import { redis } from "./redis"
 import { processJob } from "./job"
 
-/**
- * docker compose build worker
- * docker run \
- *   --name roomote-worker \
- *   --rm \
- *   --network roomote_default \
- *   -e HOST_EXECUTION_METHOD=docker \
- *   -v /var/run/docker.sock:/var/run/docker.sock \
- *   -v /tmp/roomote:/var/log/roomote roomote-worker \
- *   sh -c "pnpm worker"
- */
+// docker compose build worker
+// docker run \
+//   --name roomote-worker \
+//   --rm \
+//   --interactive \
+//   --tty \
+//   --network roomote_default \
+//   -e HOST_EXECUTION_METHOD=docker \
+//   -e GH_TOKEN=$GH_TOKEN \
+//   -e DATABASE_URL=postgresql://postgres:password@db:5432/cloud_agents \
+//   -e REDIS_URL=redis://redis:6379 \
+//   -e NODE_ENV=production \
+//   -v /var/run/docker.sock:/var/run/docker.sock \
+//   -v /tmp/roomote:/var/log/roomote \
+//   roomote-worker sh -c "bash"
 
 async function processSingleJob() {
-	const worker = new Worker("roomote", undefined, { autorun: false, connection: redis })
+	const worker = new Worker("roomote", undefined, {
+		autorun: false,
+		connection: redis,
+		lockDuration: 30 * 60 * 1_000, // 30 minutes
+	})
+
+	const token = crypto.randomUUID()
 
 	try {
-		console.log("Looking for a job to process...")
-		const job = await worker.getNextJob("worker-token")
+		const job = await worker.getNextJob(token)
 
 		if (!job) {
 			console.log("No jobs available, exiting...")
@@ -32,10 +41,10 @@ async function processSingleJob() {
 
 		try {
 			await processJob(job)
-			await job.moveToCompleted(undefined, "worker-token")
+			await job.moveToCompleted(undefined, token, false)
 			console.log(`Job ${job.id} completed successfully`)
 		} catch (error) {
-			await job.moveToFailed(error as Error, "worker-token")
+			await job.moveToFailed(error as Error, token, false)
 			console.error(`Job ${job.id} failed:`, error)
 		}
 	} catch (error) {
@@ -56,5 +65,8 @@ process.on("SIGINT", async () => {
 	process.exit(0)
 })
 
-console.log("Single job worker started")
+if (!process.env.GH_TOKEN) {
+	throw new Error("GH_TOKEN is not set")
+}
+
 processSingleJob()

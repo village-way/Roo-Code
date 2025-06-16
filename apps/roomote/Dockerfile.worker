@@ -1,4 +1,5 @@
 # docker compose build worker
+# Note: Requires $GH_TOKEN to be set as build argument.
 
 FROM roomote-base AS base
 
@@ -25,7 +26,20 @@ RUN mkdir -p /roo/.vscode \
   && code --no-sandbox --user-data-dir /roo/.vscode --install-extension csstools.postcss \
   && code --no-sandbox --user-data-dir /roo/.vscode --install-extension RooVeterinaryInc.roo-cline
 
+# Clone repo (requires $GH_TOKEN)
+ARG GH_TOKEN
+ENV GH_TOKEN=${GH_TOKEN}
+WORKDIR /roo/repos
+RUN git config --global user.email "chris@roocode.com"
+RUN git config --global user.name "Roo Code"
+RUN git config --global credential.helper store
+RUN echo "https://oauth2:${GH_TOKEN}@github.com" > ~/.git-credentials
+RUN gh repo clone RooCodeInc/Roo-Code
+WORKDIR /roo/repos/Roo-Code
+RUN pnpm install
+
 # Install dependencies
+WORKDIR /roo
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/config-eslint/package.json ./packages/config-eslint/
 COPY packages/config-typescript/package.json ./packages/config-typescript/
@@ -41,14 +55,6 @@ COPY packages/config-eslint ./packages/config-eslint/
 COPY packages/config-typescript ./packages/config-typescript/
 COPY packages/types ./packages/types/
 COPY packages/ipc ./packages/ipc/
-
-# Clone repo (requires $GH_TOKEN)
-ARG GH_TOKEN
-ENV GH_TOKEN=${GH_TOKEN}
-WORKDIR /roo/repos
-RUN gh repo clone RooCodeInc/Roo-Code
-WORKDIR /roo/repos/Roo-Code
-RUN pnpm install
 
 WORKDIR /roo/apps/roomote
 ENV NODE_ENV=production

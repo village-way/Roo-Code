@@ -103,14 +103,16 @@ export class WorkerController {
 				stdio: ["ignore", "pipe", "pipe"],
 			})
 
-			const logStream = fs.createWriteStream("/tmp/roomote-worker.log", { flags: "a" })
-
 			if (childProcess.stdout) {
-				childProcess.stdout.pipe(logStream)
+				childProcess.stdout.on("data", (data) => {
+					console.log(data.toString())
+				})
 			}
 
 			if (childProcess.stderr) {
-				childProcess.stderr.pipe(logStream)
+				childProcess.stderr.on("data", (data) => {
+					console.error(data.toString())
+				})
 			}
 
 			this.activeWorkers.add(workerId)
@@ -118,13 +120,11 @@ export class WorkerController {
 			childProcess.on("exit", (code) => {
 				console.log(`Worker ${workerId} exited with code ${code}`)
 				this.activeWorkers.delete(workerId)
-				logStream.end()
 			})
 
 			childProcess.on("error", (error) => {
 				console.error(`Worker ${workerId} error:`, error)
 				this.activeWorkers.delete(workerId)
-				logStream.end()
 			})
 
 			// Detach the process so it can run independently.

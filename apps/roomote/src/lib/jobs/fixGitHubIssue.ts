@@ -28,10 +28,10 @@ ${jobPayload.labels && jobPayload.labels.length > 0 ? `Labels: ${jobPayload.labe
 
 Please analyze the issue, understand what needs to be fixed, and implement a solution.
 
-If you're reasonably satisfied with the solution then create and submit a pull request using the "gh" command line tool:
+When you're finished, create a git branch to store your work and then submit a pull request using the "gh" command line tool:
 gh pr create --title "Fixes #${jobPayload.issue}\n\n[Your PR description here.]" --fill --template "pull_request_template.md"
 
-You'll first need to create a new branch for the pull request.
+Your job isn't done until you've created a pull request. Try to solve any git issues that arise while creating your branch and submitting your pull request.
 `.trim()
 
 	const { repo, issue } = jobPayload

@@ -78,10 +78,10 @@ services:
         env_file:
             - .env
         environment:
+            - HOST_EXECUTION_METHOD=docker
             - DATABASE_URL=postgresql://postgres:password@db:5432/cloud_agents
             - REDIS_URL=redis://redis:6379
             - NODE_ENV=production
-            - HOST_EXECUTION_METHOD=docker
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - /tmp/roomote:/var/log/roomote
