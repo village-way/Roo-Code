@@ -51,21 +51,24 @@ TITLE=$(echo "$ISSUE_DATA" | jq -r '.title')
 BODY=$(echo "$ISSUE_DATA" | jq -r '.body // ""')
 LABELS=$(echo "$ISSUE_DATA" | jq -r '[.labels[].name] | @json')
 
-TITLE_ESCAPED=$(printf '%s' "$TITLE" | sed 's/"/\\"/g' | sed 's/\n/\\n/g')
-BODY_ESCAPED=$(printf '%s' "$BODY" | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}' | sed 's/\\n$//')
+JSON_PAYLOAD=$(jq -n \
+  --arg type "github.issue.fix" \
+  --arg repo "$REPO" \
+  --argjson issue "$ISSUE_NUMBER" \
+  --arg title "$TITLE" \
+  --arg body "$BODY" \
+  --argjson labels "$LABELS" \
+  '{
+    type: $type,
+    payload: {
+      repo: $repo,
+      issue: $issue,
+      title: $title,
+      body: $body,
+      labels: $labels
+    }
+  }')
 
-JSON_PAYLOAD=$(cat <<EOF
-{
-  "type": "github.issue.fix",
-  "payload": {
-    "repo": "$REPO",
-    "issue": $ISSUE_NUMBER,
-    "title": "$TITLE_ESCAPED",
-    "body": "$BODY_ESCAPED",
-    "labels": $LABELS
-  }
-}
-EOF
-)
+echo "curl -X POST \"$JOBS_ENDPOINT\" -H \"Content-Type: application/json\" -d \"$JSON_PAYLOAD\" -w \"\nStatus: %{http_code}\n\n\""
 
 curl -X POST "$JOBS_ENDPOINT" -H "Content-Type: application/json" -d "$JSON_PAYLOAD" -w "\nStatus: %{http_code}\n\n"
