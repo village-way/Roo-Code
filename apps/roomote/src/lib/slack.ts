@@ -18,10 +18,10 @@ export interface SlackResponse {
 }
 
 export class SlackNotifier {
-	private readonly logger: Logger
+	private readonly logger?: Logger
 	private readonly token: string
 
-	constructor(logger: Logger, token: string = process.env.SLACK_API_TOKEN!) {
+	constructor(logger?: Logger, token: string = process.env.SLACK_API_TOKEN!) {
 		this.logger = logger
 		this.token = token
 	}
@@ -37,19 +37,19 @@ export class SlackNotifier {
 			})
 
 			if (!response.ok) {
-				this.logger.error(`Slack API failed: ${response.status} ${response.statusText}`)
+				this.logger?.error(`Slack API failed: ${response.status} ${response.statusText}`)
 				return null
 			}
 
 			const result: SlackResponse = await response.json()
 
 			if (!result.ok) {
-				this.logger.error(`Slack API error: ${result.error}`)
+				this.logger?.error(`Slack API error: ${result.error}`)
 			}
 
 			return result.ts ?? null
 		} catch (error) {
-			this.logger.error("Failed to send Slack message:", error)
+			this.logger?.error("Failed to send Slack message:", error)
 			return null
 		}
 	}

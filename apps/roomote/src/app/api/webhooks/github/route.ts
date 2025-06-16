@@ -7,7 +7,6 @@ import { type JobType, type JobPayload, githubIssueWebhookSchema, githubPullRequ
 import { db, cloudJobs } from "@/db"
 import { enqueue } from "@/lib"
 import { SlackNotifier } from "@/lib/slack"
-import { Logger } from "@/lib/logger"
 
 function verifySignature(body: string, signature: string, secret: string): boolean {
 	const expectedSignature = createHmac("sha256", secret).update(body, "utf8").digest("hex")
@@ -17,12 +16,13 @@ function verifySignature(body: string, signature: string, secret: string): boole
 
 async function handleIssueEvent(body: string) {
 	const data = githubIssueWebhookSchema.parse(JSON.parse(body))
-	console.log("🗄️ Issue Webhook ->", data)
 	const { action, repository, issue } = data
 
 	if (action !== "opened") {
 		return NextResponse.json({ message: "action_ignored" })
 	}
+
+	console.log("🗄️ Issue Webhook ->", data)
 
 	const type: JobType = "github.issue.fix"
 
@@ -48,14 +48,15 @@ async function handleIssueEvent(body: string) {
 
 async function handlePullRequestEvent(body: string) {
 	const data = githubPullRequestWebhookSchema.parse(JSON.parse(body))
-	console.log("🗄️ PR Webhook ->", data)
 	const { action, pull_request, repository } = data
 
 	if (action !== "opened") {
 		return NextResponse.json({ message: "action_ignored" })
 	}
 
-	// Extract issue number from PR title or body (looking for "Fixes #123" pattern)
+	console.log("🗄️ PR Webhook ->", data)
+
+	// Extract issue number from PR title or body (looking for "Fixes #123" pattern).
 	const issueNumberMatch =
 		pull_request.title.match(/(?:fixes|closes|resolves)\s+#(\d+)/i) ||
 		(pull_request.body && pull_request.body.match(/(?:fixes|closes|resolves)\s+#(\d+)/i))
@@ -66,10 +67,10 @@ async function handlePullRequestEvent(body: string) {
 
 	const issueNumber = parseInt(issueNumberMatch[1]!, 10)
 
-	// Find the job that corresponds to this issue
+	// Find the job that corresponds to this issue.
 	const jobs = await db.select().from(cloudJobs).where(eq(cloudJobs.type, "github.issue.fix"))
 
-	// Filter jobs to find the one matching this repo and issue
+	// Filter jobs to find the one matching this repo and issue.
 	const job = jobs.find((j) => {
 		const payload = j.payload as { repo: string; issue: number }
 		return payload.repo === repository.full_name && payload.issue === issueNumber
@@ -80,9 +81,8 @@ async function handlePullRequestEvent(body: string) {
 		return NextResponse.json({ message: "no_job_or_slack_thread_found" })
 	}
 
-	// Post to Slack thread
-	const logger = new Logger({ logDir: "/tmp/logs", filename: "webhook.log", tag: "webhook" })
-	const slackNotifier = new SlackNotifier(logger)
+	// Post to Slack thread.
+	const slackNotifier = new SlackNotifier()
 
 	await slackNotifier.postTaskUpdated(
 		job.slackThreadTs,

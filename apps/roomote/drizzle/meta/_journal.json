@@ -15,6 +15,13 @@
 			"when": 1750099429125,
 			"tag": "0001_fluffy_sasquatch",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1750107620472,
+			"tag": "0002_brief_sentry",
+			"breakpoints": true
 		}
 	]
 }

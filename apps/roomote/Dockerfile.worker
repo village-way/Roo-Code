@@ -36,6 +36,7 @@ RUN git config --global credential.helper store
 RUN echo "https://oauth2:${GH_TOKEN}@github.com" > ~/.git-credentials
 RUN gh repo clone RooCodeInc/Roo-Code
 WORKDIR /roo/repos/Roo-Code
+RUN gh repo set-default RooCodeInc/Roo-Code
 RUN pnpm install
 
 # Install dependencies
