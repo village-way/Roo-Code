@@ -3,8 +3,20 @@ import { Worker } from "bullmq"
 import { redis } from "./redis"
 import { processJob } from "./job"
 
+/**
+ * docker compose build worker
+ * docker run \
+ *   --name roomote-worker \
+ *   --rm \
+ *   --network roomote_default \
+ *   -e HOST_EXECUTION_METHOD=docker \
+ *   -v /var/run/docker.sock:/var/run/docker.sock \
+ *   -v /tmp/roomote:/var/log/roomote roomote-worker \
+ *   sh -c "pnpm worker"
+ */
+
 async function processSingleJob() {
-	const worker = new Worker("roomote", processJob, { connection: redis })
+	const worker = new Worker("roomote", undefined, { autorun: false, connection: redis })
 
 	try {
 		console.log("Looking for a job to process...")

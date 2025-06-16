@@ -25,13 +25,31 @@ RUN mkdir -p /roo/.vscode \
   && code --no-sandbox --user-data-dir /roo/.vscode --install-extension csstools.postcss \
   && code --no-sandbox --user-data-dir /roo/.vscode --install-extension RooVeterinaryInc.roo-cline
 
-# Clone repo
-ARG GH_TOKEN
-ENV GH_TOKEN=$GH_TOKEN
-RUN gh repo clone RooCodeInc/Roo-Code
+# Install dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/config-eslint/package.json ./packages/config-eslint/
+COPY packages/config-typescript/package.json ./packages/config-typescript/
+COPY packages/types/package.json ./packages/types/
+COPY packages/ipc/package.json ./packages/ipc/
+COPY apps/roomote/package.json ./apps/roomote/
 
-WORKDIR /roo/Roo-Code
-RUN git checkout cte/cloud-agents
+COPY scripts/bootstrap.mjs ./scripts/
 RUN pnpm install
 
-CMD ["bash"]
+COPY apps/roomote ./apps/roomote/
+COPY packages/config-eslint ./packages/config-eslint/
+COPY packages/config-typescript ./packages/config-typescript/
+COPY packages/types ./packages/types/
+COPY packages/ipc ./packages/ipc/
+
+# Clone repo (requires $GH_TOKEN)
+ARG GH_TOKEN
+ENV GH_TOKEN=${GH_TOKEN}
+WORKDIR /roo/repos
+RUN gh repo clone RooCodeInc/Roo-Code
+WORKDIR /roo/repos/Roo-Code
+RUN pnpm install
+
+WORKDIR /roo/apps/roomote
+ENV NODE_ENV=production
+CMD ["pnpm", "worker"]

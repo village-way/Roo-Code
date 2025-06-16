@@ -5,10 +5,12 @@ import { Queue } from "bullmq"
 import { redis } from "./redis"
 
 export class WorkerController {
+	private readonly POLL_INTERVAL_MS = 5000
+	private readonly MAX_WORKERS = 5
+
 	private queue: Queue
 	public isRunning = false
 	private pollingInterval: NodeJS.Timeout | null = null
-	private readonly POLL_INTERVAL_MS = 5000
 	private activeWorkers = new Set<string>()
 
 	constructor() {
@@ -60,7 +62,7 @@ export class WorkerController {
 				`Queue status: ${waitingCount} waiting, ${activeCount} active, ${this.activeWorkers.size} spawned workers`,
 			)
 
-			if (waitingCount > 0 && activeCount === 0 && this.activeWorkers.size === 0) {
+			if (waitingCount > 0 && this.activeWorkers.size < this.MAX_WORKERS) {
 				await this.spawnWorker()
 			}
 		} catch (error) {
@@ -69,25 +71,26 @@ export class WorkerController {
 	}
 
 	private async spawnWorker() {
-		const workerId = `worker-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+		const workerId = `worker-${Date.now()}`
 
 		try {
 			console.log(`Spawning worker: ${workerId}`)
-
 			const isRunningInDocker = fs.existsSync("/.dockerenv")
 
 			const dockerArgs = [
-				`--name roomote-worker-${workerId}`,
+				`--name roomote-${workerId}`,
 				"--rm",
 				"--network roomote_default",
-				"--env-file /roo/Roo-Code/apps/roomote/.env",
-				"-e NODE_ENV=production",
 				"-e HOST_EXECUTION_METHOD=docker",
+				`-e GH_TOKEN=${process.env.GH_TOKEN}`,
+				`-e DATABASE_URL=${process.env.DATABASE_URL}`,
+				`-e REDIS_URL=${process.env.REDIS_URL}`,
+				`-e NODE_ENV=${process.env.NODE_ENV}`,
 				"-v /var/run/docker.sock:/var/run/docker.sock",
 				"-v /tmp/roomote:/var/log/roomote",
 			]
 
-			const cliCommand = "cd /roo/Roo-Code/apps/roomote && pnpm worker"
+			const cliCommand = "pnpm worker"
 
 			const command = isRunningInDocker
 				? `docker run ${dockerArgs.join(" ")} roomote-worker sh -c "${cliCommand}"`

@@ -38,7 +38,7 @@ export const runTask = async <T extends JobType>({
 	publish,
 	logger,
 }: RunTaskOptions<T>) => {
-	const workspacePath = "/Users/cte/Documents/Roomote-Control" // findGitRoot(process.cwd())
+	const workspacePath = "/roo/repos/Roo-Code" // findGitRoot(process.cwd())
 	const ipcSocketPath = path.resolve(os.tmpdir(), `${crypto.randomUUID().slice(0, 8)}.sock`)
 	const env = { ROO_CODE_IPC_SOCKET_PATH: ipcSocketPath }
 	const controller = new AbortController()
