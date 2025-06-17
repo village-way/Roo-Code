@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { type Keys, keysOf } from "./type-fu.js"
+import { type Keys } from "./type-fu.js"
 import {
 	type ProviderSettings,
 	PROVIDER_SETTINGS_KEYS,
@@ -36,6 +36,7 @@ export const globalSettingsSchema = z.object({
 	alwaysAllowReadOnlyOutsideWorkspace: z.boolean().optional(),
 	alwaysAllowWrite: z.boolean().optional(),
 	alwaysAllowWriteOutsideWorkspace: z.boolean().optional(),
+	alwaysAllowWriteProtected: z.boolean().optional(),
 	writeDelayMs: z.number().optional(),
 	alwaysAllowBrowser: z.boolean().optional(),
 	alwaysApproveResubmit: z.boolean().optional(),
@@ -119,32 +120,7 @@ export type RooCodeSettings = GlobalSettings & ProviderSettings
 /**
  * SecretState
  */
-
-export type SecretState = Pick<
-	ProviderSettings,
-	| "apiKey"
-	| "glamaApiKey"
-	| "openRouterApiKey"
-	| "awsAccessKey"
-	| "awsSecretKey"
-	| "awsSessionToken"
-	| "openAiApiKey"
-	| "geminiApiKey"
-	| "openAiNativeApiKey"
-	| "deepSeekApiKey"
-	| "mistralApiKey"
-	| "unboundApiKey"
-	| "requestyApiKey"
-	| "xaiApiKey"
-	| "groqApiKey"
-	| "chutesApiKey"
-	| "litellmApiKey"
-	| "codeIndexOpenAiKey"
-	| "codeIndexQdrantApiKey"
-	| "codebaseIndexOpenAiCompatibleApiKey"
->
-
-export const SECRET_STATE_KEYS = keysOf<SecretState>()([
+export const SECRET_STATE_KEYS = [
 	"apiKey",
 	"glamaApiKey",
 	"openRouterApiKey",
@@ -165,7 +141,8 @@ export const SECRET_STATE_KEYS = keysOf<SecretState>()([
 	"codeIndexOpenAiKey",
 	"codeIndexQdrantApiKey",
 	"codebaseIndexOpenAiCompatibleApiKey",
-])
+] as const satisfies readonly (keyof ProviderSettings)[]
+export type SecretState = Pick<ProviderSettings, (typeof SECRET_STATE_KEYS)[number]>
 
 export const isSecretStateKey = (key: string): key is Keys<SecretState> =>
 	SECRET_STATE_KEYS.includes(key as Keys<SecretState>)
@@ -201,6 +178,7 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	alwaysAllowReadOnlyOutsideWorkspace: false,
 	alwaysAllowWrite: true,
 	alwaysAllowWriteOutsideWorkspace: false,
+	alwaysAllowWriteProtected: false,
 	writeDelayMs: 1000,
 	alwaysAllowBrowser: true,
 	alwaysApproveResubmit: true,
