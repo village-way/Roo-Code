@@ -1,6 +1,6 @@
 #!/bin/bash
 
-REPO="RooCodeInc/Roo-Code"
+REPO="village-way/Roo-Code"
 ISSUE_NUMBER="$1"
 BASE_URL="http://localhost:3001"
 JOBS_ENDPOINT="$BASE_URL/api/jobs"

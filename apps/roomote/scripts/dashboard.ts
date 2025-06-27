@@ -6,7 +6,7 @@ import { createBullBoard } from "@bull-board/api"
 import express from "express"
 import type { Express, Request, Response } from "express"
 
-const redis = new IORedis(process.env.REDIS_URL || "redis://localhost:6380", { maxRetriesPerRequest: null })
+const redis = new IORedis(process.env.REDIS_URL || "redis://localhost:6379", { maxRetriesPerRequest: null })
 const queue = new Queue("roomote", { connection: redis })
 
 const serverAdapter = new ExpressAdapter()
