@@ -149,6 +149,47 @@ const StyledMarkdown = styled.div`
 	ul {
 		padding-left: 2.5em;
 		margin-left: 0;
+		margin-bottom: 1em;
+	}
+
+	/* Restore list styles that were removed by preflight.css */
+	ol {
+		list-style-type: decimal;
+	}
+
+	ul {
+		list-style-type: disc;
+	}
+
+	/* Handle nested lists */
+	ul ul {
+		list-style-type: circle;
+	}
+
+	ul ul ul {
+		list-style-type: square;
+	}
+
+	ol ol {
+		list-style-type: lower-alpha;
+	}
+
+	ol ol ol {
+		list-style-type: lower-roman;
+	}
+
+	/* Ensure list items have proper spacing */
+	li {
+		margin-bottom: 0.25em;
+	}
+
+	/* Handle list items with paragraphs */
+	li p {
+		margin: 0;
+	}
+
+	li p + p {
+		margin-top: 0.5em;
 	}
 
 	p {
